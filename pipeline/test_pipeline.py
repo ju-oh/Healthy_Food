@@ -64,6 +64,12 @@ class CuisinesTest(unittest.TestCase):
         self.assertEqual(cuisines("가장맛있는족발"), ["족발보쌈"])
         self.assertEqual(cuisines("화성(상)휴게소(닭강정탕수육)"), ["중식", "치킨"])
         self.assertEqual(cuisines("스타벅스서동탄DT점"), [])
+        self.assertEqual(cuisines("탕화쿵푸마라탕 대신점"), ["마라탕"])
+        # 지점명 오탐 (실제 데이터)
+        self.assertEqual(cuisines("스텔라떡볶이 경북경주용황점"), [])
+        self.assertEqual(cuisines("60계 경북경주현곡점"), ["치킨"])
+        self.assertEqual(cuisines("뚜레쥬르옥동호반점"), [])
+        self.assertEqual(cuisines("이디야 부산차이나타운점"), [])
 
 
 if __name__ == "__main__":
