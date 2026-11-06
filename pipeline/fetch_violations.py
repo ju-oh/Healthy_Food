@@ -1,12 +1,19 @@
 """식품안전나라 I2630(식품접객업 행정처분)을 받아 부산·경남·경북만 data/violations.json에 저장한다.
 
-사용법: FOODSAFETY_API_KEY=발급키 python pipeline/fetch_violations.py
+사용법: 프로젝트 루트 .env에 FOODSAFETY_API_KEY=발급키 를 넣고 python pipeline/fetch_violations.py
 키가 없으면 sample 키로 동작한다(최대 5건).
 """
 import json
 import os
 import urllib.request
 from pathlib import Path
+
+ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
+if ENV_FILE.exists():  # KEY=VALUE 줄만 읽는다. 이미 설정된 환경변수가 우선
+    for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
 
 API_KEY = os.environ.get("FOODSAFETY_API_KEY", "sample")
 SERVICE = "I2630"
