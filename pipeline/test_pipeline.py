@@ -1,6 +1,7 @@
 import unittest
 
 from classify import classify
+from cuisine import cuisines
 from fetch_hygiene_grades import is_active
 from foodsafety import in_regions
 
@@ -52,6 +53,17 @@ class ClassifyTest(unittest.TestCase):
     def test_cases(self):
         for text, expected in self.CASES.items():
             self.assertEqual(classify({"VILTCN": text}), expected, text)
+
+
+class CuisinesTest(unittest.TestCase):
+    def test_cases(self):
+        self.assertEqual(cuisines("홍콩반점0410 해운대점"), ["중식"])
+        self.assertEqual(cuisines("교촌치킨 창원점"), ["치킨"])
+        self.assertEqual(cuisines("BBQ 포항점"), ["치킨"])
+        self.assertEqual(cuisines("도미노피자 김해점"), ["피자"])
+        self.assertEqual(cuisines("가장맛있는족발"), ["족발보쌈"])
+        self.assertEqual(cuisines("화성(상)휴게소(닭강정탕수육)"), ["중식", "치킨"])
+        self.assertEqual(cuisines("스타벅스서동탄DT점"), [])
 
 
 if __name__ == "__main__":
