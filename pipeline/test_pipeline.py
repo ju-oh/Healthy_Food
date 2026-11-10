@@ -4,6 +4,7 @@ from classify import classify
 from cuisine import cuisines
 from fetch_hygiene_grades import is_active
 from foodsafety import in_regions
+from geocode import clean
 
 
 class InRegionsTest(unittest.TestCase):
@@ -70,6 +71,14 @@ class CuisinesTest(unittest.TestCase):
         self.assertEqual(cuisines("60계 경북경주현곡점"), ["치킨"])
         self.assertEqual(cuisines("뚜레쥬르옥동호반점"), [])
         self.assertEqual(cuisines("이디야 부산차이나타운점"), [])
+
+
+class CleanAddressTest(unittest.TestCase):
+    def test_cases(self):  # 실제 수집 데이터의 주소 형태
+        self.assertEqual(clean("경상남도 밀양시 하남읍 수산중앙로 97-1(1층)"), "경상남도 밀양시 하남읍 수산중앙로 97-1")
+        self.assertEqual(clean("부산광역시 동래구 온천장로107번길 44(온천동,4층)"), "부산광역시 동래구 온천장로107번길 44")
+        self.assertEqual(clean("경상북도 울진군 울진읍 울진중앙로 137"), "경상북도 울진군 울진읍 울진중앙로 137")
+        self.assertEqual(clean("부산광역시 해운대구 센텀남대로 35, 1층 101호"), "부산광역시 해운대구 센텀남대로 35")
 
 
 if __name__ == "__main__":
