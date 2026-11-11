@@ -1,0 +1,4 @@
+fastapi
+uvicorn
+psycopg[binary]
+httpx  # 테스트(TestClient)용
