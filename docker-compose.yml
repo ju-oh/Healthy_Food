@@ -1,0 +1,15 @@
+# 로컬 개발용 DB. 실행: docker compose up -d
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_PASSWORD: dev  # 로컬 전용. 배포 환경에서는 쓰지 않는다
+      POSTGRES_DB: food
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro  # 볼륨이 비어 있을 때 한 번만 실행됨
+
+volumes:
+  pgdata:

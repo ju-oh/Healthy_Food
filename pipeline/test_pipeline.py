@@ -1,5 +1,6 @@
 import unittest
 
+from build_load_sql import build, copy_block
 from classify import classify
 from cuisine import cuisines
 from fetch_hygiene_grades import is_active
@@ -79,6 +80,32 @@ class CleanAddressTest(unittest.TestCase):
         self.assertEqual(clean("부산광역시 동래구 온천장로107번길 44(온천동,4층)"), "부산광역시 동래구 온천장로107번길 44")
         self.assertEqual(clean("경상북도 울진군 울진읍 울진중앙로 137"), "경상북도 울진군 울진읍 울진중앙로 137")
         self.assertEqual(clean("부산광역시 해운대구 센텀남대로 35, 1층 101호"), "부산광역시 해운대구 센텀남대로 35")
+
+
+class BuildTest(unittest.TestCase):
+    G = {"LCNS_NO": "1", "BSSH_NM": "교촌치킨 창원점", "ADDR": "경상남도 창원시 A로 1(1층)", "INDUTY_NM": "일반음식점",
+         "HG_ASGN_NO": "제HG1호", "HG_ASGN_LV": "적합", "ASGN_FROM": "20250101", "ASGN_TO": "20270101", "HG_ASGN_NM": "식약처"}
+    V = {"LCNS_NO": "1", "PRCSCITYPOINT_BSSHNM": "다른이름", "ADDR": "x", "INDUTY_CD_NM": "x", "DSPSDTLS_SEQ": "9",
+         "DSPS_TYPECD_NM": "영업정지", "VILTCN": "소비기한 경과제품 보관", "LAWORD_CD_NM": "법", "DSPS_DCSNDT": "20260101",
+         "PUBLIC_DT": "2026-12-08 00:00:00.0"}
+
+    def test_build(self):
+        closed = {**self.V, "LCNS_NO": "2", "DSPSDTLS_SEQ": "10", "VILTCN": "영업시설 전부 철거"}
+        shops, grades, viols = build([self.G], [self.V, closed], {"경상남도 창원시 A로 1": [35.1, 128.6]})
+        self.assertEqual(shops, [["1", "교촌치킨 창원점", "경상남도 창원시 A로 1(1층)", "일반음식점", "{치킨}", 35.1, 128.6]])
+        self.assertEqual(grades[0][3:5], ["20250101", "20270101"])
+        self.assertEqual([v[0] for v in viols], ["9"])  # 철거(closed)는 빠짐
+        self.assertEqual(viols[0][2], "hygiene")
+        self.assertEqual(viols[0][7], "2026-12-08")
+
+    def test_no_coords(self):
+        shops, _, _ = build([self.G], [], {})
+        self.assertEqual(shops[0][5:], ["", ""])
+
+    def test_copy_escapes(self):
+        block = copy_block("t", ["a"], [['쉼표, "따옴표"\n줄바꿈']])
+        self.assertIn('"쉼표, ""따옴표""\n줄바꿈"', block)  # 따옴표로 감싸져 한 값으로 유지
+        self.assertTrue(block.endswith("\\.\n"))
 
 
 if __name__ == "__main__":
