@@ -11,7 +11,8 @@ const cuisineList = ['치킨', '피자', '족발보쌈', '중식', '마라탕'];
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await KakaoMapSdk.instance.initialize(kakaoKey);
+  // 키가 없으면 지도 없이 목록으로 미리보기 (카카오 SDK는 x86 에뮬레이터에서 동작하지 않음)
+  if (kakaoKey.isNotEmpty) await KakaoMapSdk.instance.initialize(kakaoKey);
   runApp(MaterialApp(
     title: '위생지도',
     theme: ThemeData(colorSchemeSeed: Colors.green, useMaterial3: true),
@@ -37,6 +38,13 @@ class _MapScreenState extends State<MapScreen> {
   String? _error;
   int? _count;
   bool _loading = false, _again = false;
+  List<api.Shop> _shops = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (kakaoKey.isEmpty) _load(); // 지도가 없으면 onMapReady가 안 불리므로 바로 불러온다
+  }
 
   Future<void> _onReady(KakaoMapController c) async {
     _map = c;
@@ -77,19 +85,22 @@ class _MapScreenState extends State<MapScreen> {
 
   Future<void> _loadOnce() async {
     final map = _map, styles = _styles;
-    if (map == null || styles == null) return;
+    if (kakaoKey.isNotEmpty && (map == null || styles == null)) return;
     try {
       final shops = await api.nearby(_center.latitude, _center.longitude, cuisine: _cuisine);
-      for (final p in _pois) {
-        await map.labelLayer.removePoi(p);
-      }
-      _pois.clear();
-      for (final s in shops) {
-        _pois.add(await map.labelLayer.addPoi(LatLng(s.lat!, s.lng!),
-            style: styles[s.pin]!, onClick: () => _open(s.id)));
+      if (map != null && styles != null) {
+        for (final p in _pois) {
+          await map.labelLayer.removePoi(p);
+        }
+        _pois.clear();
+        for (final s in shops) {
+          _pois.add(await map.labelLayer.addPoi(LatLng(s.lat!, s.lng!),
+              style: styles[s.pin]!, onClick: () => _open(s.id)));
+        }
       }
       if (mounted) {
         setState(() {
+          _shops = shops;
           _count = shops.length;
           _error = null;
         });
@@ -117,14 +128,19 @@ class _MapScreenState extends State<MapScreen> {
         ],
       ),
       body: Stack(children: [
-        KakaoMap(
-          option: const KakaoMapOption(position: haeundae, zoomLevel: 15),
-          onMapReady: _onReady,
-          onCameraMoveEnd: (pos, _) {
-            _center = pos.position;
-            _load();
-          },
-        ),
+        if (kakaoKey.isEmpty)
+          ListView(padding: const EdgeInsets.only(top: 56, bottom: 80), children: [
+            for (final s in _shops) ShopTile(s, onTap: () => _open(s.id)),
+          ])
+        else
+          KakaoMap(
+            option: const KakaoMapOption(position: haeundae, zoomLevel: 15),
+            onMapReady: _onReady,
+            onCameraMoveEnd: (pos, _) {
+              _center = pos.position;
+              _load();
+            },
+          ),
         Positioned(
           top: 8,
           left: 8,
